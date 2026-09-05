@@ -1,0 +1,335 @@
+from fastapi import FastAPI, HTTPException, Query, Path
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, Any
+import datetime
+
+app = FastAPI(
+    title="Bhoomi-Predict API",
+    description="AI-Powered Land Acquisition Intelligence & Predictive Decision Support System REST Backend",
+    version="4.2.0",
+)
+
+# Enable CORS for React frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- Pydantic Data Models ---
+class ProjectResponse(BaseModel):
+    id: str
+    name: str
+    sector: str
+    state: str
+    district: str
+    corridor: str
+    landAreaHa: float
+    affectedParcels: int
+    affectedFamilies: int
+    riskScore: int
+    riskCategory: str
+    delayProbability: float
+    predictedDelayMonths: float
+    statutoryTimelineMonths: int
+    aiPredictedTimelineMonths: float
+    currentStage: str
+    stageProgressPercent: int
+    legalDisputesCount: int
+    courtCaseStatus: str
+    litigationDurationMonths: int
+    approvalStatus: str
+    pendingApprovalsCount: int
+    compensationStatus: str
+    compensationApprovedCr: float
+    compensationDisbursedCr: float
+    dbtStatus: str
+    rnrProgressPercent: int
+    rnrCompensationCr: float
+    environmentalClearance: str
+    stakeholderResponsivenessScore: int
+    primaryDriver: str
+    recommendedAction: str
+    status: str
+    lat: float
+    lng: float
+    lastUpdated: str
+
+class InterventionModel(BaseModel):
+    id: Optional[str] = None
+    projectId: str
+    projectName: str
+    state: str
+    district: str
+    issue: str
+    recommendation: str
+    priority: str
+    assignedDepartment: str
+    assignedOfficer: str
+    targetDate: str
+    expectedDelayReductionDays: int
+    status: str = "Pending"
+    createdAt: Optional[str] = None
+    notes: Optional[str] = None
+
+class PredictionRequest(BaseModel):
+    projectId: str
+    state: str
+    district: str
+    sector: str
+    landAreaHa: float
+    affectedParcels: int
+    legalDisputesCount: int
+    pendingApprovalsCount: int
+    titleMutationBacklog: bool = False
+
+class PredictionResponse(BaseModel):
+    projectId: str
+    riskScore: int
+    riskCategory: str
+    delayProbability: float
+    estimatedDelayMonths: float
+    primaryDrivers: List[Dict[str, Any]]
+    recommendedAction: str
+    confidenceIndex: float = 94.6
+
+# --- Demo Data Layer ---
+MOCK_STATE_MATRIX = [
+    {
+        "state": "Maharashtra",
+        "corridor": "Mumbai-Nagpur Samruddhi Corridor & DMIC",
+        "projectsCount": 24,
+        "statutoryMonths": 18,
+        "aiPredictedMonths": 29.4,
+        "aiLagMonths": 11.4,
+        "riskCategory": "HIGH",
+        "litigationExposurePercent": 28.5,
+        "compensationDisbursedPercent": 68.2,
+        "titleMutationBacklogPercent": 61.0,
+    },
+    {
+        "state": "Gujarat",
+        "corridor": "Delhi-Mumbai Expressway & Dholera SIR",
+        "projectsCount": 18,
+        "statutoryMonths": 14,
+        "aiPredictedMonths": 16.1,
+        "aiLagMonths": 2.1,
+        "riskCategory": "MEDIUM",
+        "litigationExposurePercent": 12.4,
+        "compensationDisbursedPercent": 88.5,
+        "titleMutationBacklogPercent": 22.1,
+    },
+    {
+        "state": "Karnataka",
+        "corridor": "Bengaluru-Chennai Industrial Corridor",
+        "projectsCount": 16,
+        "statutoryMonths": 16,
+        "aiPredictedMonths": 22.8,
+        "aiLagMonths": 6.8,
+        "riskCategory": "HIGH",
+        "litigationExposurePercent": 24.1,
+        "compensationDisbursedPercent": 74.0,
+        "titleMutationBacklogPercent": 44.5,
+    },
+    {
+        "state": "Uttar Pradesh",
+        "corridor": "Ganga Expressway & Defense Corridor",
+        "projectsCount": 26,
+        "statutoryMonths": 20,
+        "aiPredictedMonths": 29.2,
+        "aiLagMonths": 9.2,
+        "riskCategory": "HIGH",
+        "litigationExposurePercent": 31.0,
+        "compensationDisbursedPercent": 71.8,
+        "titleMutationBacklogPercent": 52.3,
+    },
+    {
+        "state": "Tamil Nadu",
+        "corridor": "Chennai-Kanyakumari Industrial Highway",
+        "projectsCount": 15,
+        "statutoryMonths": 15,
+        "aiPredictedMonths": 18.5,
+        "aiLagMonths": 3.5,
+        "riskCategory": "MEDIUM",
+        "litigationExposurePercent": 18.2,
+        "compensationDisbursedPercent": 82.1,
+        "titleMutationBacklogPercent": 31.8,
+    },
+]
+
+MOCK_DELAY_DRIVERS = [
+    {"name": "Legal & Court Litigation", "percentage": 34, "color": "#EF4444", "detail": "High Court stays, ownership disputes, and compensation enhancement petitions."},
+    {"name": "Land Titling & Mutation", "percentage": 26, "color": "#F97316", "detail": "Incomplete ancestral title records, mutation backlogs, and unregistered heirs."},
+    {"name": "R&R Compensation & Resettlement", "percentage": 22, "color": "#F59E0B", "detail": "Family identification disputes, alternative land allocation SLA delays."},
+    {"name": "Environmental & Forest Clearance", "percentage": 18, "color": "#3B82F6", "detail": "Stage-1 Statutory forestry permissions and CRZ clearance bottlenecks."},
+]
+
+# Generate sample projects
+MOCK_PROJECTS = []
+states_data = [
+    ("Maharashtra", "Thane", 19.75, 75.71),
+    ("Gujarat", "Ahmedabad", 22.25, 71.19),
+    ("Karnataka", "Bengaluru Rural", 15.31, 75.71),
+    ("Uttar Pradesh", "Prayagraj", 26.84, 80.94),
+    ("Tamil Nadu", "Kanchipuram", 11.12, 78.65),
+]
+
+for idx in range(1, 101):
+    st, dist, lat, lng = states_data[(idx - 1) % len(states_data)]
+    risk = "CRITICAL" if idx % 4 == 0 else "HIGH" if idx % 3 == 0 else "MEDIUM" if idx % 2 == 0 else "LOW"
+    score = 85 if risk == "CRITICAL" else 68 if risk == "HIGH" else 45 if risk == "MEDIUM" else 22
+    
+    MOCK_PROJECTS.append({
+        "id": f"LA-2026-{1000 + idx}",
+        "name": f"{st} Infrastructure Corridor Package-{idx}",
+        "sector": "Highways & Expressways" if idx % 2 == 0 else "Railways & Dedicated Freight",
+        "state": st,
+        "district": dist,
+        "corridor": f"{st} Main Package {idx}",
+        "landAreaHa": 250 + idx * 15,
+        "affectedParcels": 80 + idx * 4,
+        "affectedFamilies": 45 + idx * 3,
+        "riskScore": score,
+        "riskCategory": risk,
+        "delayProbability": float(min(99.0, score * 0.95)),
+        "predictedDelayMonths": float(round(score * 0.14, 1)),
+        "statutoryTimelineMonths": 18,
+        "aiPredictedTimelineMonths": float(round(18 + score * 0.14, 1)),
+        "currentStage": "Legal Dispute Resolution" if risk == "CRITICAL" else "Compensation Disbursement",
+        "stageProgressPercent": 45,
+        "legalDisputesCount": 8 if risk == "CRITICAL" else 2,
+        "courtCaseStatus": "High Court Stay" if risk == "CRITICAL" else "Clear",
+        "litigationDurationMonths": 14 if risk == "CRITICAL" else 0,
+        "approvalStatus": "Pending Clearance" if risk == "CRITICAL" else "Approved",
+        "pendingApprovalsCount": 3 if risk == "CRITICAL" else 0,
+        "compensationStatus": "Partially Disbursed",
+        "compensationApprovedCr": float(240.0 + idx * 5),
+        "compensationDisbursedCr": float(180.0 + idx * 3),
+        "dbtStatus": "Active DBT",
+        "rnrProgressPercent": 65,
+        "rnrCompensationCr": 45.0,
+        "environmentalClearance": "Cleared",
+        "stakeholderResponsivenessScore": 7,
+        "primaryDriver": "Legal & Court Litigation" if risk == "CRITICAL" else "Land Titling & Mutation",
+        "recommendedAction": "Initiate district-level title verification and mutation reconciliation.",
+        "status": "Critical Bottleneck" if risk == "CRITICAL" else "At Risk" if risk == "HIGH" else "On Track",
+        "lat": lat + (idx % 10 - 5) * 0.1,
+        "lng": lng + ((idx * 3) % 10 - 5) * 0.1,
+        "lastUpdated": datetime.datetime.now().strftime("%Y-%m-%d %H:%M IST"),
+    })
+
+# --- REST Endpoints ---
+@app.get("/")
+def root():
+    return {
+        "platform": "Bhoomi-Predict AI Platform API",
+        "status": "ONLINE",
+        "version": "4.2.0",
+        "documentation": "/docs",
+    }
+
+@app.get("/api/projects", response_model=List[ProjectResponse])
+def get_projects(
+    state: Optional[str] = None,
+    riskCategory: Optional[str] = None,
+    sector: Optional[str] = None,
+):
+    results = MOCK_PROJECTS
+    if state and state != "ALL":
+        results = [p for p in results if p["state"] == state]
+    if riskCategory and riskCategory != "ALL":
+        results = [p for p in results if p["riskCategory"] == riskCategory]
+    if sector and sector != "ALL":
+        results = [p for p in results if p["sector"] == sector]
+    return results
+
+@app.get("/api/projects/{id}", response_model=ProjectResponse)
+def get_project_by_id(id: str = Path(..., description="Project ID e.g. LA-2026-1004")):
+    proj = next((p for p in MOCK_PROJECTS if p["id"] == id), None)
+    if not proj:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return proj
+
+@app.get("/api/projects/{id}/risk")
+def get_project_risk(id: str):
+    proj = get_project_by_id(id)
+    return {
+        "id": proj["id"],
+        "riskScore": proj["riskScore"],
+        "riskCategory": proj["riskCategory"],
+        "delayProbability": proj["delayProbability"],
+        "predictedDelayMonths": proj["predictedDelayMonths"],
+    }
+
+@app.get("/api/dashboard/summary")
+def get_dashboard_summary():
+    total_area = sum(p["landAreaHa"] for p in MOCK_PROJECTS)
+    critical_count = sum(1 for p in MOCK_PROJECTS if p["riskCategory"] in ["CRITICAL", "HIGH"])
+    return {
+        "activeParcelsCount": len(MOCK_PROJECTS),
+        "cadastralScopeHa": total_area,
+        "criticalDelayVectorCount": critical_count,
+        "litigationExposurePercent": 19.7,
+        "meanDelayProbability": 38.4,
+        "compensationDisbursedCr": 14820.0,
+        "compensationTotalCr": 19970.0,
+        "dbtPayoutPercent": 74.2,
+    }
+
+@app.get("/api/dashboard/state-analysis")
+def get_state_analysis():
+    return MOCK_STATE_MATRIX
+
+@app.get("/api/dashboard/delay-drivers")
+def get_delay_drivers():
+    return MOCK_DELAY_DRIVERS
+
+@app.post("/api/predictions", response_model=PredictionResponse)
+def run_prediction(req: PredictionRequest):
+    # Simulated XGBoost ML Prediction Engine
+    base_score = 25
+    if req.legalDisputesCount > 0:
+        base_score += req.legalDisputesCount * 12
+    if req.pendingApprovalsCount > 0:
+        base_score += req.pendingApprovalsCount * 10
+    if req.titleMutationBacklog:
+        base_score += 20
+    
+    score = min(99, max(15, base_score))
+    risk_cat = "CRITICAL" if score >= 81 else "HIGH" if score >= 61 else "MEDIUM" if score >= 31 else "LOW"
+    
+    return PredictionResponse(
+        projectId=req.projectId,
+        riskScore=score,
+        riskCategory=risk_cat,
+        delayProbability=float(round(score * 0.94, 1)),
+        estimatedDelayMonths=float(round(score * 0.15, 1)),
+        primaryDrivers=[
+            {"driver": "Legal Disputes & Court Cases", "attribution": "42%"},
+            {"driver": "Title Mutation Backlog", "attribution": "32%"},
+            {"driver": "Department SLA Approvals", "attribution": "26%"},
+        ],
+        recommendedAction="Initiate emergency SLAO reconciliation camp and legal stay vacation petition.",
+        confidenceIndex=94.6,
+    )
+
+@app.get("/api/models/metrics")
+def get_model_metrics():
+    return {
+        "version": "Predictive Engine v4.2-Prod",
+        "status": "ACTIVE",
+        "lastTrainedDate": "2026-08-30 02:00 IST",
+        "trainingRecordsCount": 142850,
+        "accuracy": 0.938,
+        "precision": 0.912,
+        "recall": 0.945,
+        "f1Score": 0.928,
+        "rocAuc": 0.962,
+        "confidenceIndex": 94.6,
+        "algorithm": "Gradient Boosted Trees (XGBoost) + Cox Proportional Hazards Survival Analysis",
+        "modelDrift": 0.012,
+        "featuresUsed": 48,
+    }
