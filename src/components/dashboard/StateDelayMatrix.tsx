@@ -12,20 +12,20 @@ export const StateDelayMatrix: React.FC<StateDelayMatrixProps> = ({
   onSelectState,
 }) => {
   return (
-    <div className="gov-card p-5 rounded-lg bg-white border border-slate-200 shadow-xs flex flex-col h-full">
-      <div className="flex items-start justify-between mb-4">
+    <div className="clean-card p-6 flex flex-col h-full">
+      <div className="flex items-start justify-between mb-5">
         <div>
           <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
             <Clock className="w-4 h-4 text-blue-600" />
-            State-Level Acquisition Delay Matrix
+            State Acquisition Delay Matrix
           </h3>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Statutory vs AI-projected delivery lag measured in calendar months across major infrastructure clusters.
+          <p className="text-xs text-slate-500 mt-1">
+            Statutory timeline vs AI-predicted delivery lag across key infrastructure states.
           </p>
         </div>
       </div>
 
-      <div className="space-y-3.5 flex-1 overflow-y-auto pr-1">
+      <div className="space-y-4 flex-1 overflow-y-auto pr-1">
         {matrixData.map((item) => {
           const maxTimeline = 36;
           const statPct = Math.min(100, (item.statutoryMonths / maxTimeline) * 100);
@@ -38,26 +38,28 @@ export const StateDelayMatrix: React.FC<StateDelayMatrixProps> = ({
             <div
               key={item.state}
               onClick={() => onSelectState && onSelectState(item.state)}
-              className="p-3 rounded-lg border border-slate-100 hover:border-slate-300 hover:bg-slate-50/70 transition cursor-pointer group"
+              className="p-4 rounded-xl border border-slate-200/70 hover:border-blue-300 hover:shadow-xs hover:bg-slate-50/60 transition cursor-pointer group"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <div>
-                  <span className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition">
-                    {item.state}
-                  </span>
-                  <span className="text-[11px] text-slate-400 ml-2 font-mono hidden sm:inline">
-                    ({item.projectsCount} Projects)
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition">
+                      {item.state}
+                    </span>
+                    <span className="text-[11px] text-slate-400 font-medium">
+                      ({item.projectsCount} Projects)
+                    </span>
+                  </div>
                   <p className="text-[11px] text-slate-500 font-medium truncate max-w-xs">{item.corridor}</p>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <span className="text-xs font-medium text-slate-600 mr-2">
+                    <span className="text-xs text-slate-500 mr-2 font-medium">
                       {item.statutoryMonths} Mo Stat
                     </span>
                     <span
-                      className={`text-xs font-bold font-mono ${
+                      className={`text-xs font-bold ${
                         isCritical
                           ? 'text-red-600'
                           : isHigh
@@ -65,25 +67,25 @@ export const StateDelayMatrix: React.FC<StateDelayMatrixProps> = ({
                           : 'text-amber-600'
                       }`}
                     >
-                      +{item.aiLagMonths.toFixed(1)} Mo AI Lag
+                      +{item.aiLagMonths.toFixed(1)} Mo Lag
                     </span>
                   </div>
 
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${
+                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
                       isCritical
-                        ? 'bg-red-50 text-red-700 border-red-200'
+                        ? 'bg-red-50 text-red-700 border border-red-200/80'
                         : isHigh
-                        ? 'bg-orange-50 text-orange-700 border-orange-200'
-                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                        ? 'bg-orange-50 text-orange-700 border border-orange-200/80'
+                        : 'bg-amber-50 text-amber-700 border border-amber-200/80'
                     }`}
                   >
-                    {item.riskCategory} RISK
+                    {item.riskCategory}
                   </span>
                 </div>
               </div>
 
-              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden flex relative">
+              <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden flex relative mb-2">
                 <div
                   className="bg-blue-600 h-full transition-all duration-500"
                   style={{ width: `${statPct}%` }}
@@ -98,10 +100,10 @@ export const StateDelayMatrix: React.FC<StateDelayMatrixProps> = ({
                 ></div>
               </div>
 
-              <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1 font-mono">
+              <div className="flex justify-between items-center text-[10px] text-slate-400 font-medium">
                 <span>Title Backlog: {item.titleMutationBacklogPercent}%</span>
-                <span>Litigation Exp: {item.litigationExposurePercent}%</span>
-                <span>DBT Payout: {item.compensationDisbursedPercent}%</span>
+                <span>Litigation: {item.litigationExposurePercent}%</span>
+                <span>Payout: {item.compensationDisbursedPercent}%</span>
               </div>
             </div>
           );

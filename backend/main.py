@@ -5,7 +5,7 @@ from typing import List, Optional, Dict, Any
 import datetime
 
 app = FastAPI(
-    title="Bhoomi-Predict API",
+    title="Sanket Gati API",
     description="AI-Powered Land Acquisition Intelligence & Predictive Decision Support System REST Backend",
     version="4.2.0",
 )
@@ -20,6 +20,12 @@ app.add_middleware(
 )
 
 # --- Pydantic Data Models ---
+class DriverAttributionItem(BaseModel):
+    driver: str
+    percentage: float
+    impactScore: float
+    description: str
+
 class ProjectResponse(BaseModel):
     id: str
     name: str
@@ -52,6 +58,7 @@ class ProjectResponse(BaseModel):
     environmentalClearance: str
     stakeholderResponsivenessScore: int
     primaryDriver: str
+    driverAttribution: List[DriverAttributionItem] = []
     recommendedAction: str
     status: str
     lat: float
@@ -167,6 +174,92 @@ MOCK_DELAY_DRIVERS = [
     {"name": "Environmental & Forest Clearance", "percentage": 18, "color": "#3B82F6", "detail": "Stage-1 Statutory forestry permissions and CRZ clearance bottlenecks."},
 ]
 
+MOCK_INTERVENTIONS = [
+    {
+        "id": "INT-2026-001",
+        "projectId": "LA-2026-1004",
+        "projectName": "Maharashtra Highways Phase-1 (Thane Corridor)",
+        "state": "Maharashtra",
+        "district": "Thane",
+        "issue": "Unresolved High Court stay order regarding ancestral land share calculation.",
+        "recommendation": "Escalate to Special Government Pleader & set up expedited Lok Adalat bench.",
+        "priority": "CRITICAL",
+        "assignedDepartment": "Revenue & Legal Cell",
+        "assignedOfficer": "Shri S. K. Kulkarni (Addl Collector)",
+        "targetDate": "2026-09-25",
+        "expectedDelayReductionDays": 38,
+        "status": "In Progress",
+        "createdAt": "2026-08-28",
+        "notes": "District Magistrate convened preliminary hearing with advocate on record.",
+    },
+    {
+        "id": "INT-2026-002",
+        "projectId": "LA-2026-1011",
+        "projectName": "Uttar Pradesh Industrial Phase-4 (Prayagraj Corridor)",
+        "state": "Uttar Pradesh",
+        "district": "Prayagraj",
+        "issue": "Title mutation backlog across 84 survey numbers in Naini sub-division.",
+        "recommendation": "Deploy dedicated Special Land Acquisition Officer (SLAO) mutation camp.",
+        "priority": "HIGH",
+        "assignedDepartment": "Land Records & Revenue",
+        "assignedOfficer": "Shri R. P. Verma (SLAO)",
+        "targetDate": "2026-09-30",
+        "expectedDelayReductionDays": 28,
+        "status": "Pending",
+        "createdAt": "2026-09-01",
+    },
+]
+
+MOCK_ALERTS = [
+    {
+        "id": "ALT-901",
+        "projectId": "LA-2026-1004",
+        "projectName": "Maharashtra Highways Phase-1 (Thane Corridor)",
+        "state": "Maharashtra",
+        "district": "Thane",
+        "alertType": "Legal Dispute",
+        "riskScoreDelta": 18,
+        "previousProb": 62.4,
+        "currentProb": 88.2,
+        "primaryDriver": "Legal & Court Litigation",
+        "recommendedAction": "Escalate to Special Legal Cell for High Court stay vacation petition.",
+        "severity": "CRITICAL",
+        "timestamp": "10 mins ago",
+        "isRead": False,
+    },
+    {
+        "id": "ALT-902",
+        "projectId": "LA-2026-1008",
+        "projectName": "Telangana Railways Phase-1 (Rangareddy Corridor)",
+        "state": "Telangana",
+        "district": "Rangareddy",
+        "alertType": "R&R Milestone Missed",
+        "riskScoreDelta": 14,
+        "previousProb": 71.0,
+        "currentProb": 85.0,
+        "primaryDriver": "R&R Compensation & Resettlement",
+        "recommendedAction": "Convene SLAO emergency review for plot possession handover.",
+        "severity": "CRITICAL",
+        "timestamp": "1 hour ago",
+        "isRead": False,
+    },
+]
+
+MOCK_AUDIT_LOGS = [
+    {
+        "id": "AUD-8801",
+        "user": "Rajesh Kumar, IAS",
+        "role": "Chief Land Acquisition Officer",
+        "action": "Intervention Assigned",
+        "projectId": "LA-2026-1004",
+        "projectName": "Maharashtra Highways Phase-1",
+        "timestamp": "2026-09-05 14:15:10",
+        "previousValue": "Unassigned",
+        "newValue": "Assigned to Shri S. K. Kulkarni (Addl Collector)",
+        "ipAddress": "10.204.14.82",
+    },
+]
+
 # Generate sample projects
 MOCK_PROJECTS = []
 states_data = [
@@ -181,7 +274,8 @@ for idx in range(1, 101):
     st, dist, lat, lng = states_data[(idx - 1) % len(states_data)]
     risk = "CRITICAL" if idx % 4 == 0 else "HIGH" if idx % 3 == 0 else "MEDIUM" if idx % 2 == 0 else "LOW"
     score = 85 if risk == "CRITICAL" else 68 if risk == "HIGH" else 45 if risk == "MEDIUM" else 22
-    
+    p_driver = "Legal & Court Litigation" if risk == "CRITICAL" else "Land Titling & Mutation"
+
     MOCK_PROJECTS.append({
         "id": f"LA-2026-{1000 + idx}",
         "name": f"{st} Infrastructure Corridor Package-{idx}",
@@ -213,7 +307,13 @@ for idx in range(1, 101):
         "rnrCompensationCr": 45.0,
         "environmentalClearance": "Cleared",
         "stakeholderResponsivenessScore": 7,
-        "primaryDriver": "Legal & Court Litigation" if risk == "CRITICAL" else "Land Titling & Mutation",
+        "primaryDriver": p_driver,
+        "driverAttribution": [
+            {"driver": p_driver, "percentage": 38.0, "impactScore": 8.4, "description": "Major bottleneck slowing down physical possession."},
+            {"driver": "Land Titling & Mutation", "percentage": 28.0, "impactScore": 6.2, "description": "Multiple un-mutated survey numbers."},
+            {"driver": "Compensation Disbursement", "percentage": 20.0, "impactScore": 4.8, "description": "Bank account verification pending."},
+            {"driver": "Inter-department SLA", "percentage": 14.0, "impactScore": 3.1, "description": "Response pending from Public Works Dept."},
+        ],
         "recommendedAction": "Initiate district-level title verification and mutation reconciliation.",
         "status": "Critical Bottleneck" if risk == "CRITICAL" else "At Risk" if risk == "HIGH" else "On Track",
         "lat": lat + (idx % 10 - 5) * 0.1,
@@ -225,7 +325,7 @@ for idx in range(1, 101):
 @app.get("/")
 def root():
     return {
-        "platform": "Bhoomi-Predict AI Platform API",
+        "platform": "Sanket Gati AI Platform API",
         "status": "ONLINE",
         "version": "4.2.0",
         "documentation": "/docs",
@@ -287,9 +387,28 @@ def get_state_analysis():
 def get_delay_drivers():
     return MOCK_DELAY_DRIVERS
 
+@app.get("/api/interventions")
+def get_interventions():
+    return MOCK_INTERVENTIONS
+
+@app.post("/api/interventions")
+def create_intervention(intervention: InterventionModel):
+    item = intervention.dict()
+    item["id"] = f"INT-2026-{len(MOCK_INTERVENTIONS) + 1:03d}"
+    item["createdAt"] = datetime.datetime.now().strftime("%Y-%m-%d")
+    MOCK_INTERVENTIONS.insert(0, item)
+    return item
+
+@app.get("/api/alerts")
+def get_alerts():
+    return MOCK_ALERTS
+
+@app.get("/api/audit-logs")
+def get_audit_logs():
+    return MOCK_AUDIT_LOGS
+
 @app.post("/api/predictions", response_model=PredictionResponse)
 def run_prediction(req: PredictionRequest):
-    # Simulated XGBoost ML Prediction Engine
     base_score = 25
     if req.legalDisputesCount > 0:
         base_score += req.legalDisputesCount * 12
@@ -329,7 +448,21 @@ def get_model_metrics():
         "f1Score": 0.928,
         "rocAuc": 0.962,
         "confidenceIndex": 94.6,
-        "algorithm": "Gradient Boosted Trees (XGBoost) + Cox Proportional Hazards Survival Analysis",
+        "algorithm": "Random Forest Classifier + SHAP TreeExplainer",
         "modelDrift": 0.012,
         "featuresUsed": 48,
     }
+
+@app.get("/api/predictive-analytics")
+@app.get("/api/predictive-analytics/{project_id}")
+def get_predictive_analytics(project_id: str = "LA-2026-1004"):
+    try:
+        from backend.predictive_engine import analyze_project
+        return analyze_project(project_id)
+    except Exception as e:
+        try:
+            from predictive_engine import analyze_project
+            return analyze_project(project_id)
+        except Exception as inner_e:
+            raise HTTPException(status_code=500, detail=str(inner_e))
+

@@ -1,37 +1,39 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
 :root {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  --bg-slate: #f8fafc;
-  --navy-dark: #0f172a;
-  --navy-sidebar: #1e293b;
-  --gov-blue: #1d4ed8;
-  --gov-blue-hover: #1e40af;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --bg-main: #f8fafc;
+  --card-bg: #ffffff;
+  --border-light: #e2e8f0;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --brand-blue: #2563eb;
+  --brand-blue-hover: #1d4ed8;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #f8fafc;
-  color: #0f172a;
-  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom Scrollbar for Enterprise Density */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 3px;
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
@@ -42,33 +44,45 @@ body {
   width: 100%;
   height: 100%;
   z-index: 10;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border-radius: 0.75rem;
 }
 
 .leaflet-popup-content-wrapper {
-  border-radius: 8px;
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
-  padding: 4px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12);
+  padding: 6px;
+  border: 1px solid #e2e8f0;
 }
 
-.gov-card {
+/* Modern Clean Card Utility */
+.clean-card {
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.03);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.gov-card-hover {
-  transition: all 0.2s ease-in-out;
+.clean-card-hover {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.gov-card-hover:hover {
-  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.08);
+.clean-card-hover:hover {
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
   border-color: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.2); }
+  50% { opacity: 0.4; transform: scale(1.25); }
 }
 
 .animate-pulse-dot {

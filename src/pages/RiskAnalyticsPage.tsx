@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import type { LandAcquisitionProject } from '../types';
+import React, { useState, useEffect } from 'react';
+import type { LandAcquisitionProject, PredictiveAnalyticsResult } from '../types';
+import { apiService } from '../services/api';
 import {
   BarChart,
   Bar,
@@ -11,9 +12,12 @@ import {
 } from 'recharts';
 import {
   BrainCircuit,
-  AlertTriangle,
   ChevronRight,
   Sparkles,
+  Scale,
+  Banknote,
+  FileCheck2,
+  Users,
 } from 'lucide-react';
 
 interface RiskAnalyticsPageProps {
@@ -25,15 +29,35 @@ export const RiskAnalyticsPage: React.FC<RiskAnalyticsPageProps> = ({
   projects,
   onSelectProject,
 }) => {
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(projects[0]?.id || 'LA-2026-1004');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(
+    projects[0]?.id || 'LA-2026-1004'
+  );
+  const [predictiveResult, setPredictiveResult] = useState<PredictiveAnalyticsResult | null>(null);
+
+  useEffect(() => {
+    async function fetchPrediction() {
+      const res = await apiService.getPredictiveAnalytics(selectedProjectId);
+      setPredictiveResult(res);
+    }
+    fetchPrediction();
+  }, [selectedProjectId]);
+
 
   const selectedProject = projects.find((p) => p.id === selectedProjectId) || projects[0];
 
   const totalProjects = projects.length;
   const criticalCount = projects.filter((p) => p.riskCategory === 'CRITICAL').length;
   const highCount = projects.filter((p) => p.riskCategory === 'HIGH').length;
-  const avgRiskScore = totalProjects > 0 ? (projects.reduce((a, b) => a + b.riskScore, 0) / totalProjects).toFixed(1) : '54.2';
-  const avgDelayDays = totalProjects > 0 ? Math.round((projects.reduce((a, b) => a + b.predictedDelayMonths, 0) / totalProjects) * 30) : 185;
+  const avgRiskScore =
+    totalProjects > 0
+      ? (projects.reduce((a, b) => a + b.riskScore, 0) / totalProjects).toFixed(1)
+      : '54.2';
+  const avgDelayDays =
+    totalProjects > 0
+      ? Math.round(
+          (projects.reduce((a, b) => a + b.predictedDelayMonths, 0) / totalProjects) * 30
+        )
+      : 185;
 
   const stateAggMap: Record<string, { state: string; avgScore: number; avgDelay: number; count: number }> = {};
   projects.forEach((p) => {
@@ -51,176 +75,231 @@ export const RiskAnalyticsPage: React.FC<RiskAnalyticsPageProps> = ({
     avgDelayMonths: parseFloat((s.avgDelay / s.count).toFixed(1)),
   }));
 
-  const featureImportance = [
-    { feature: 'High Court / Civil Stay Orders', shapValue: 0.38, impact: 'High' },
-    { feature: 'Ancestral Title Mutation Backlog', shapValue: 0.28, impact: 'High' },
-    { feature: 'R&R Plot Allotment Consent', shapValue: 0.21, impact: 'Medium' },
-    { feature: 'Forest Stage-1 Permission SLA', shapValue: 0.16, impact: 'Medium' },
-    { feature: 'DBT Bank Account Re-verification', shapValue: 0.11, impact: 'Low' },
-  ];
-
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-4">
         <div>
-          <h1 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+          <h1 className="text-xl font-extrabold text-slate-900 flex items-center gap-2 tracking-tight">
             <BrainCircuit className="w-6 h-6 text-blue-600" />
-            Risk Analytics & Explainable AI (XAI)
+            Random Forest + SHAP Predictive Analytics
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
-            SHAP feature attribution, survival curve analysis, and project-wise risk profiling.
+            Machine learning inference, SHAP feature attributions, and rule-based recommendation engine.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="gov-card p-3 rounded-lg bg-white border border-slate-200">
-          <span className="text-[10px] font-semibold text-slate-400 uppercase">Avg Risk Score</span>
-          <div className="text-xl font-extrabold text-slate-900 font-mono mt-0.5">{avgRiskScore} / 100</div>
+      {/* Top Overview KPI Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
+        <div className="clean-card p-4">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Avg Risk Score</span>
+          <div className="text-2xl font-extrabold text-slate-900 mt-1">{avgRiskScore} / 100</div>
         </div>
-        <div className="gov-card p-3 rounded-lg bg-white border border-slate-200">
-          <span className="text-[10px] font-semibold text-slate-400 uppercase">Critical Projects</span>
-          <div className="text-xl font-extrabold text-red-600 font-mono mt-0.5">{criticalCount}</div>
+        <div className="clean-card p-4">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Critical Corridors</span>
+          <div className="text-2xl font-extrabold text-red-600 mt-1">{criticalCount}</div>
         </div>
-        <div className="gov-card p-3 rounded-lg bg-white border border-slate-200">
-          <span className="text-[10px] font-semibold text-slate-400 uppercase">High Risk Projects</span>
-          <div className="text-xl font-extrabold text-orange-600 font-mono mt-0.5">{highCount}</div>
+        <div className="clean-card p-4">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">High Risk</span>
+          <div className="text-2xl font-extrabold text-orange-600 mt-1">{highCount}</div>
         </div>
-        <div className="gov-card p-3 rounded-lg bg-white border border-slate-200">
-          <span className="text-[10px] font-semibold text-slate-400 uppercase">Mean Predicted Delay</span>
-          <div className="text-xl font-extrabold text-slate-900 font-mono mt-0.5">+{avgDelayDays} Days</div>
+        <div className="clean-card p-4">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mean Delay</span>
+          <div className="text-2xl font-extrabold text-slate-900 mt-1">+{avgDelayDays} Days</div>
         </div>
-        <div className="gov-card p-3 rounded-lg bg-white border border-slate-200 col-span-2 sm:col-span-1">
-          <span className="text-[10px] font-semibold text-slate-400 uppercase">XAI Model Engine</span>
-          <div className="text-xs font-bold text-blue-700 mt-1 flex items-center gap-1">
+        <div className="clean-card p-4 col-span-2 sm:col-span-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ML Architecture</span>
+          <div className="text-xs font-semibold text-blue-600 mt-1 flex items-center gap-1">
             <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-            SHAP + XGBoost v4.2
+            Random Forest + SHAP
           </div>
         </div>
       </div>
 
-      {selectedProject && (
-        <div className="gov-card p-5 rounded-lg bg-white border border-slate-200 shadow-xs">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+      {/* Predictive Analytics Feature Card for High-Risk Project */}
+      {predictiveResult && (
+        <div className="clean-card p-6 border-2 border-blue-200/80 shadow-md">
+          {/* Card Title & Project Selector */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-100">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                  {selectedProject.id}
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                  {predictiveResult.projectId}
                 </span>
                 <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
-                    selectedProject.riskCategory === 'CRITICAL'
-                      ? 'bg-red-100 text-red-700 border border-red-200'
-                      : selectedProject.riskCategory === 'HIGH'
-                      ? 'bg-orange-100 text-orange-700 border border-orange-200'
-                      : 'bg-amber-100 text-amber-700 border border-amber-200'
+                  className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
+                    predictiveResult.riskLevel === 'HIGH' || predictiveResult.riskLevel === 'CRITICAL'
+                      ? 'bg-red-50 text-red-700 border border-red-200/80'
+                      : 'bg-amber-50 text-amber-700 border border-amber-200/80'
                   }`}
                 >
-                  {selectedProject.riskCategory} RISK
+                  Risk Level: {predictiveResult.riskLevel}
+                </span>
+                <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                  Random Forest Inference
                 </span>
               </div>
-              <h2 className="text-lg font-bold text-slate-900 mt-1">{selectedProject.name}</h2>
-              <p className="text-xs text-slate-500 font-medium">
-                {selectedProject.state} • {selectedProject.district} • {selectedProject.sector}
+              <h2 className="text-lg font-extrabold text-slate-900 tracking-tight">
+                {predictiveResult.projectName}
+              </h2>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                {predictiveResult.state} • {predictiveResult.district} • {predictiveResult.sector}
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 font-semibold whitespace-nowrap">Select Project:</span>
-              <div className="relative">
-                <select
-                  value={selectedProjectId}
-                  onChange={(e) => setSelectedProjectId(e.target.value)}
-                  className="bg-slate-50 border border-slate-300 rounded-md py-1.5 px-3 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer max-w-xs"
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-500 font-medium whitespace-nowrap">Select Corridor:</span>
+              <select
+                value={selectedProjectId}
+                onChange={(e) => setSelectedProjectId(e.target.value)}
+                className="bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer max-w-xs shadow-2xs"
+              >
+                {projects.slice(0, 20).map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.id} - {p.name.substring(0, 26)}... ({p.riskCategory})
+                  </option>
+                ))}
+              </select>
+              {selectedProject && (
+                <button
+                  onClick={() => onSelectProject(selectedProject)}
+                  className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3.5 py-2 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-2xs"
                 >
-                  {projects.slice(0, 30).map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.id} - {p.name.substring(0, 30)}... ({p.riskCategory})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                onClick={() => onSelectProject(selectedProject)}
-                className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 py-1.5 rounded-md transition shadow-2xs cursor-pointer flex items-center gap-1"
-              >
-                <span>Full Intelligence</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
+                  <span>Inspect</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 my-4">
-            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-center">
-              <span className="text-[10px] font-semibold text-slate-500 uppercase">Risk Score</span>
-              <div className="text-3xl font-black text-slate-900 font-mono mt-1">
-                {selectedProject.riskScore} <span className="text-xs text-slate-400 font-normal">/ 100</span>
+          {/* Core Analytics Outputs: Delay Prob, Risk Level, Expected Delay */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 my-6">
+            {/* Delay Probability */}
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-red-50/80 to-amber-50/60 border border-red-200/80 text-center relative overflow-hidden">
+              <span className="text-[11px] font-bold text-red-700 uppercase tracking-wider block mb-1">
+                Delay Probability
+              </span>
+              <div className="text-4xl font-extrabold text-red-600 font-mono tracking-tight">
+                ~{predictiveResult.delayProbability}%
               </div>
-              <span className="text-[11px] text-slate-500 font-medium">Normalized Cadastral Risk</span>
+              <p className="text-[11px] text-red-800/80 font-medium mt-1">
+                Calculated via Random Forest probability output
+              </p>
             </div>
 
-            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-center">
-              <span className="text-[10px] font-semibold text-slate-500 uppercase">Delay Probability</span>
-              <div className="text-3xl font-black text-red-600 font-mono mt-1">
-                {selectedProject.delayProbability}%
+            {/* Risk Level */}
+            <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 text-center">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                Risk Classification
+              </span>
+              <div className="text-4xl font-extrabold text-orange-600 font-mono tracking-tight">
+                {predictiveResult.riskLevel}
               </div>
-              <span className="text-[11px] text-slate-500 font-medium">Cox Survival Hazard</span>
+              <p className="text-[11px] text-slate-500 font-medium mt-1">
+                Action Threshold Triggered
+              </p>
             </div>
 
-            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-center">
-              <span className="text-[10px] font-semibold text-slate-500 uppercase">Predicted Delay</span>
-              <div className="text-3xl font-black text-slate-900 font-mono mt-1">
-                +{(selectedProject.predictedDelayMonths * 30).toFixed(0)} <span className="text-xs text-slate-500 font-normal">days</span>
+            {/* Expected Delay */}
+            <div className="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 text-center">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                Expected Delay
+              </span>
+              <div className="text-4xl font-extrabold text-slate-900 font-mono tracking-tight">
+                {predictiveResult.expectedDelay}
               </div>
-              <span className="text-[11px] text-slate-500 font-medium">+{selectedProject.predictedDelayMonths} Calendar Months</span>
-            </div>
-
-            <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-center">
-              <span className="text-[10px] font-semibold text-slate-500 uppercase">Risk Classification</span>
-              <div
-                className={`text-2xl font-black font-mono mt-1 ${
-                  selectedProject.riskCategory === 'CRITICAL'
-                    ? 'text-red-600'
-                    : selectedProject.riskCategory === 'HIGH'
-                    ? 'text-orange-600'
-                    : 'text-amber-600'
-                }`}
-              >
-                {selectedProject.riskCategory}
-              </div>
-              <span className="text-[11px] text-slate-500 font-medium">Action Priority Level</span>
+              <p className="text-[11px] text-slate-500 font-medium mt-1">
+                Estimated Delivery Lag ({predictiveResult.expectedDelayMonths} months mean)
+              </p>
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-slate-100">
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <AlertTriangle className="w-4 h-4 text-orange-500" />
-              Top Risk Drivers (SHAP Factor Attribution)
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {selectedProject.driverAttribution.map((attr, idx) => (
-                <div key={idx} className="p-2.5 rounded border border-slate-200 bg-slate-50 flex items-start gap-2 text-xs">
-                  <span className="w-5 h-5 rounded-full bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
-                    {idx + 1}
-                  </span>
-                  <div>
-                    <div className="font-semibold text-slate-900 flex items-center justify-between">
-                      <span>{attr.driver}</span>
-                      <span className="font-mono text-blue-700 font-bold ml-2">{attr.percentage}%</span>
+          {/* Top Delay Drivers & Rule-Based Recommendation Engine */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+            {/* Top Delay Drivers (SHAP Normalized) */}
+            <div className="p-5 rounded-2xl bg-slate-50/60 border border-slate-200/70">
+              <h3 className="text-sm font-bold text-slate-900 mb-1 flex items-center gap-2">
+                <BrainCircuit className="w-4 h-4 text-blue-600" />
+                Top Delay Drivers (SHAP Attributions)
+              </h3>
+              <p className="text-xs text-slate-500 mb-4 font-medium">
+                Normalized SHAP feature attribution breakdown for this project.
+              </p>
+
+              <div className="space-y-3.5">
+                {predictiveResult.topDelayDrivers.map((driver, index) => (
+                  <div key={driver.driver}>
+                    <div className="flex justify-between items-center text-xs mb-1">
+                      <span className="font-semibold text-slate-800 flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold text-[10px] flex items-center justify-center">
+                          {index + 1}
+                        </span>
+                        {driver.driver}
+                      </span>
+                      <span className="text-blue-700 font-bold font-mono text-xs">
+                        ~{driver.percentage}%
+                      </span>
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{attr.description}</p>
+                    <div className="w-full bg-slate-200/80 h-2.5 rounded-full overflow-hidden">
+                      <div
+                        className="bg-blue-600 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${driver.percentage * 2.2}%` }}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            </div>
+
+            {/* Rule-Based Recommended Actions */}
+            <div className="p-5 rounded-2xl bg-blue-50/40 border border-blue-200/70">
+              <h3 className="text-sm font-bold text-blue-900 mb-1 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-blue-600" />
+                Recommended Actions (Rule-Based Engine)
+              </h3>
+              <p className="text-xs text-blue-700/80 mb-4 font-medium">
+                Automated corrective actions triggered by top feature attributions & dataset values.
+              </p>
+
+              <div className="space-y-3">
+                {predictiveResult.recommendedActions.map((action, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3.5 rounded-xl bg-white border border-blue-200/80 shadow-2xs text-xs flex items-start gap-3"
+                  >
+                    <div className="p-2 rounded-lg bg-blue-50 text-blue-600 shrink-0 mt-0.5">
+                      {idx === 0 && <Scale className="w-4 h-4" />}
+                      {idx === 1 && <Banknote className="w-4 h-4" />}
+                      {idx === 2 && <FileCheck2 className="w-4 h-4" />}
+                      {idx === 3 && <Users className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="font-bold text-slate-900 text-xs">
+                          {action.trigger}
+                        </span>
+                        <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200/60 font-mono">
+                          {action.metric}
+                        </span>
+                      </div>
+                      <p className="text-slate-700 font-medium leading-relaxed">
+                        {action.action}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       )}
 
+      {/* State-wise Chart & SHAP Global Feature Importance */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="gov-card p-5 rounded-lg bg-white border border-slate-200">
+        <div className="clean-card p-6">
           <h3 className="text-sm font-bold text-slate-900 mb-1">State-wise Average Risk Score</h3>
-          <p className="text-xs text-slate-500 mb-4">Mean risk score comparison across key infrastructure states.</p>
+          <p className="text-xs text-slate-500 mb-4">Mean risk score comparison across key states.</p>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stateChartData}>
@@ -229,23 +308,35 @@ export const RiskAnalyticsPage: React.FC<RiskAnalyticsPageProps> = ({
                 <YAxis tick={{ fontSize: 10, fill: '#64748b' }} domain={[0, 100]} />
                 <Tooltip
                   formatter={(value: any) => [`${value} Score`, 'Avg Risk']}
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#fff', borderRadius: '6px', fontSize: '11px' }}
+                  contentStyle={{
+                    backgroundColor: '#0f172a',
+                    borderColor: '#334155',
+                    color: '#fff',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                  }}
                 />
-                <Bar dataKey="avgScore" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="avgScore" fill="#2563eb" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="gov-card p-5 rounded-lg bg-white border border-slate-200">
+        <div className="clean-card p-6">
           <h3 className="text-sm font-bold text-slate-900 mb-1">SHAP Global Feature Importance</h3>
-          <p className="text-xs text-slate-500 mb-4">Relative weight of parameters in predicting land acquisition delay.</p>
-          <div className="space-y-3">
-            {featureImportance.map((f) => (
+          <p className="text-xs text-slate-500 mb-4">Relative parameter weighting in predicting acquisition delay.</p>
+          <div className="space-y-4">
+            {[
+              { feature: 'Legal disputes count', shapValue: 0.32 },
+              { feature: 'Compensation pending percentage', shapValue: 0.27 },
+              { feature: 'Pending statutory approvals', shapValue: 0.19 },
+              { feature: 'Rehabilitation progress lag', shapValue: 0.12 },
+              { feature: 'Total land scope (Ha)', shapValue: 0.10 },
+            ].map((f) => (
               <div key={f.feature}>
-                <div className="flex justify-between items-center text-xs mb-1">
+                <div className="flex justify-between items-center text-xs mb-1.5">
                   <span className="font-semibold text-slate-800">{f.feature}</span>
-                  <span className="font-mono text-blue-700 font-bold">{(f.shapValue * 100).toFixed(0)}% Impact</span>
+                  <span className="text-blue-600 font-bold font-mono">{(f.shapValue * 100).toFixed(0)}%</span>
                 </div>
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                   <div

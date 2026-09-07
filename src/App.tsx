@@ -29,6 +29,7 @@ import { apiService } from './services/api';
 export function App() {
   const [activeTab, setActiveTab] = useState<NavItemKey>('dashboard');
   const [userRole, setUserRole] = useState<UserRole>('Super Administrator');
+  const [mobileOpen, setMobileOpen] = useState(false);
   
   const [filters, setFilters] = useState<GlobalFilterState>({
     state: 'ALL',
@@ -116,6 +117,8 @@ export function App() {
         }}
         userRole={userRole}
         unreadAlertsCount={unreadAlertsCount}
+        mobileOpen={mobileOpen}
+        onCloseMobile={() => setMobileOpen(false)}
       />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -126,13 +129,14 @@ export function App() {
           onRoleChange={setUserRole}
           unreadAlertsCount={unreadAlertsCount}
           onOpenAlerts={() => setActiveTab('alerts')}
+          onToggleMobileSidebar={() => setMobileOpen((prev) => !prev)}
         />
 
         <main className="flex-1 overflow-y-auto px-6 py-6">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-64 text-slate-500 text-xs">
               <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-3"></div>
-              <span>Initializing Bhoomi-Predict Intelligence Engine...</span>
+              <span>Initializing Sanket Gati Intelligence Engine...</span>
             </div>
           ) : selectedProject ? (
             <ProjectDetailPage

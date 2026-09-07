@@ -177,3 +177,39 @@ export interface GlobalFilterState {
   financialYear: string;
   searchQuery: string;
 }
+
+export interface PredictiveDriverAttribution {
+  driver: string;
+  percentage: number;
+  raw_shap?: number;
+}
+
+export interface RecommendedActionItem {
+  trigger: string;
+  action: string;
+  metric: string;
+  priority: string;
+}
+
+export interface PredictiveAnalyticsResult {
+  projectId: string;
+  projectName: string;
+  state: string;
+  district: string;
+  sector: string;
+  delayProbability: number;
+  riskLevel: 'HIGH' | 'MEDIUM' | 'LOW' | 'CRITICAL';
+  expectedDelay: string;
+  expectedDelayMonths: number;
+  metricsData: {
+    legalDisputes: number;
+    compensationPaidPct: number;
+    compensationPendingPct: number;
+    pendingApprovals: number;
+    rehabilitationProgressPct: number;
+    landAreaHa: number;
+  };
+  topDelayDrivers: PredictiveDriverAttribution[];
+  recommendedActions: RecommendedActionItem[];
+}
+

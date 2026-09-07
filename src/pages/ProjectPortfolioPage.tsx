@@ -24,7 +24,7 @@ export const ProjectPortfolioPage: React.FC<ProjectPortfolioPageProps> = ({
   onFilterChange,
   onSelectProject,
 }) => {
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [sortBy, setSortBy] = useState<'riskScore' | 'delayProbability' | 'landAreaHa' | 'id'>('riskScore');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -68,64 +68,64 @@ export const ProjectPortfolioPage: React.FC<ProjectPortfolioPageProps> = ({
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 pb-4">
         <div>
-          <h1 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+          <h1 className="text-xl font-extrabold text-slate-900 flex items-center gap-2 tracking-tight">
             <FolderKanban className="w-6 h-6 text-blue-600" />
             Land Acquisition Project Portfolio
           </h1>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
-            National directory of ongoing and upcoming infrastructure land acquisition projects.
+            Directory of national infrastructure land acquisition projects.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center bg-slate-100 p-1 rounded-md">
-            <button
-              onClick={() => setViewMode('table')}
-              className={`p-1.5 rounded text-xs transition cursor-pointer ${
-                viewMode === 'table' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-500'
-              }`}
-              title="Table View"
-            >
-              <List className="w-4 h-4" />
-            </button>
+          <div className="flex items-center bg-slate-100/80 p-1 rounded-xl border border-slate-200/60">
             <button
               onClick={() => setViewMode('cards')}
-              className={`p-1.5 rounded text-xs transition cursor-pointer ${
+              className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
                 viewMode === 'cards' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-500'
               }`}
               title="Card View"
             >
               <Grid className="w-4 h-4" />
             </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
+                viewMode === 'table' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-500'
+              }`}
+              title="Table View"
+            >
+              <List className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="gov-card p-4 rounded-lg bg-white border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+      <div className="clean-card p-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3 flex-1">
           <div className="relative flex-1 max-w-sm">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search by ID, project name, district..."
+              placeholder="Search by ID, name, district..."
               value={filters.searchQuery}
               onChange={(e) => onFilterChange({ searchQuery: e.target.value })}
-              className="w-full bg-slate-50 border border-slate-200 rounded-md pl-9 pr-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-slate-50 border border-slate-200/80 rounded-xl pl-9 pr-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
-          <span className="text-xs text-slate-500 font-mono">
-            Showing {sorted.length} of {projects.length} projects
+          <span className="text-xs text-slate-500 font-medium">
+            Showing {sorted.length} of {projects.length}
           </span>
         </div>
 
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-slate-500 font-semibold">Sort by:</span>
+          <span className="text-slate-500 font-medium">Sort:</span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="bg-slate-50 border border-slate-200 rounded-md py-1 px-2 text-xs font-medium focus:outline-none cursor-pointer"
+            className="bg-slate-50 border border-slate-200 rounded-xl py-1 px-3 text-xs font-medium focus:outline-none cursor-pointer"
           >
             <option value="riskScore">Risk Score</option>
             <option value="delayProbability">Delay Probability</option>
@@ -134,76 +134,124 @@ export const ProjectPortfolioPage: React.FC<ProjectPortfolioPageProps> = ({
           </select>
           <button
             onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-            className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition font-mono font-bold text-xs cursor-pointer"
+            className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition font-bold text-xs cursor-pointer"
           >
             {sortOrder.toUpperCase()}
           </button>
         </div>
       </div>
 
-      {viewMode === 'table' ? (
-        <div className="gov-card p-4 rounded-lg bg-white border border-slate-200 overflow-x-auto">
+      {viewMode === 'cards' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {paginatedProjects.map((p) => (
+            <div
+              key={p.id}
+              onClick={() => onSelectProject(p)}
+              className="clean-card clean-card-hover p-5 flex flex-col justify-between cursor-pointer"
+            >
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                    {p.id}
+                  </span>
+                  <span
+                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
+                      p.riskCategory === 'CRITICAL'
+                        ? 'bg-red-50 text-red-700 border border-red-200/80'
+                        : p.riskCategory === 'HIGH'
+                        ? 'bg-orange-50 text-orange-700 border border-orange-200/80'
+                        : 'bg-amber-50 text-amber-700 border border-amber-200/80'
+                    }`}
+                  >
+                    {p.riskCategory}
+                  </span>
+                </div>
+
+                <h3 className="font-bold text-slate-900 text-sm mb-1 line-clamp-2 leading-snug">{p.name}</h3>
+                <p className="text-xs text-slate-500 mb-4">{p.state} • {p.district}</p>
+
+                <div className="grid grid-cols-2 gap-2 bg-slate-50/80 p-3 rounded-xl text-xs mb-4 border border-slate-100">
+                  <div>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Risk Score</span>
+                    <span className="font-extrabold text-slate-900 text-sm">{p.riskScore}/100</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">Est. Lag</span>
+                    <span className="font-extrabold text-red-600 text-sm">+{p.predictedDelayMonths} Mo</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                <span className="font-medium">{p.landAreaHa.toLocaleString()} Ha</span>
+                <span className="text-blue-600 font-semibold flex items-center gap-0.5">
+                  View Details <ChevronRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="clean-card p-5 overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px]">
-                <th className="py-2.5 px-3 cursor-pointer" onClick={() => toggleSort('id')}>
+              <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider text-[10px] bg-slate-50/50">
+                <th className="py-3 px-3.5 cursor-pointer" onClick={() => toggleSort('id')}>
                   ID <ArrowUpDown className="w-3 h-3 inline ml-0.5" />
                 </th>
-                <th className="py-2.5 px-3">Project Name</th>
-                <th className="py-2.5 px-3">State / District</th>
-                <th className="py-2.5 px-3">Sector</th>
-                <th className="py-2.5 px-3 font-mono cursor-pointer" onClick={() => toggleSort('landAreaHa')}>
-                  Land Area <ArrowUpDown className="w-3 h-3 inline ml-0.5" />
+                <th className="py-3 px-3.5">Project Name</th>
+                <th className="py-3 px-3.5">State / District</th>
+                <th className="py-3 px-3.5">Sector</th>
+                <th className="py-3 px-3.5 cursor-pointer" onClick={() => toggleSort('landAreaHa')}>
+                  Area <ArrowUpDown className="w-3 h-3 inline ml-0.5" />
                 </th>
-                <th className="py-2.5 px-3 text-center cursor-pointer" onClick={() => toggleSort('riskScore')}>
+                <th className="py-3 px-3.5 text-center cursor-pointer" onClick={() => toggleSort('riskScore')}>
                   Risk Score <ArrowUpDown className="w-3 h-3 inline ml-0.5" />
                 </th>
-                <th className="py-2.5 px-3 text-center cursor-pointer" onClick={() => toggleSort('delayProbability')}>
+                <th className="py-3 px-3.5 text-center cursor-pointer" onClick={() => toggleSort('delayProbability')}>
                   Delay Prob <ArrowUpDown className="w-3 h-3 inline ml-0.5" />
                 </th>
-                <th className="py-2.5 px-3 text-center">Predicted Delay</th>
-                <th className="py-2.5 px-3">Current Stage</th>
-                <th className="py-2.5 px-3 text-center">Action</th>
+                <th className="py-3 px-3.5 text-center">Predicted Lag</th>
+                <th className="py-3 px-3.5 text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-800 font-medium">
+            <tbody className="divide-y divide-slate-100 text-slate-700 font-medium">
               {paginatedProjects.map((p) => (
                 <tr
                   key={p.id}
-                  className="hover:bg-blue-50/30 transition cursor-pointer"
+                  className="hover:bg-slate-50 transition cursor-pointer"
                   onClick={() => onSelectProject(p)}
                 >
-                  <td className="py-3 px-3 font-mono font-bold text-blue-700 whitespace-nowrap">{p.id}</td>
-                  <td className="py-3 px-3 max-w-xs font-semibold text-slate-900 truncate">{p.name}</td>
-                  <td className="py-3 px-3 whitespace-nowrap">
+                  <td className="py-3.5 px-3.5 font-bold text-blue-600 whitespace-nowrap">{p.id}</td>
+                  <td className="py-3.5 px-3.5 max-w-xs font-semibold text-slate-900 truncate">{p.name}</td>
+                  <td className="py-3.5 px-3.5 whitespace-nowrap">
                     <div>{p.state}</div>
-                    <div className="text-[10px] text-slate-500">{p.district}</div>
+                    <div className="text-[10px] text-slate-400">{p.district}</div>
                   </td>
-                  <td className="py-3 px-3 text-slate-600 truncate max-w-[120px]">{p.sector}</td>
-                  <td className="py-3 px-3 font-mono">{p.landAreaHa} Ha</td>
-                  <td className="py-3 px-3 text-center whitespace-nowrap">
+                  <td className="py-3.5 px-3.5 text-slate-600 truncate max-w-[130px]">{p.sector}</td>
+                  <td className="py-3.5 px-3.5">{p.landAreaHa.toLocaleString()} Ha</td>
+                  <td className="py-3.5 px-3.5 text-center whitespace-nowrap">
                     <span
-                      className={`inline-block font-mono font-extrabold px-2 py-0.5 rounded text-[11px] ${
+                      className={`inline-block font-bold px-2.5 py-0.5 rounded-full text-[11px] ${
                         p.riskCategory === 'CRITICAL'
-                          ? 'bg-red-100 text-red-800'
+                          ? 'bg-red-50 text-red-700 border border-red-200/80'
                           : p.riskCategory === 'HIGH'
-                          ? 'bg-orange-100 text-orange-800'
-                          : 'bg-amber-100 text-amber-800'
+                          ? 'bg-orange-50 text-orange-700 border border-orange-200/80'
+                          : 'bg-amber-50 text-amber-700 border border-amber-200/80'
                       }`}
                     >
                       {p.riskScore}/100
                     </span>
                   </td>
-                  <td className="py-3 px-3 text-center font-mono font-bold text-red-600">{p.delayProbability}%</td>
-                  <td className="py-3 px-3 text-center font-mono font-bold">+{p.predictedDelayMonths} Mo</td>
-                  <td className="py-3 px-3 text-slate-600 max-w-[140px] truncate text-[11px]">{p.currentStage}</td>
-                  <td className="py-3 px-3 text-center">
+                  <td className="py-3.5 px-3.5 text-center font-bold text-red-600">{p.delayProbability}%</td>
+                  <td className="py-3.5 px-3.5 text-center font-bold text-slate-900">+{p.predictedDelayMonths} Mo</td>
+                  <td className="py-3.5 px-3.5 text-center">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onSelectProject(p);
                       }}
-                      className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded cursor-pointer"
+                      className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
@@ -213,57 +261,10 @@ export const ProjectPortfolioPage: React.FC<ProjectPortfolioPageProps> = ({
             </tbody>
           </table>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {paginatedProjects.map((p) => (
-            <div
-              key={p.id}
-              onClick={() => onSelectProject(p)}
-              className="gov-card p-4 rounded-lg bg-white border border-slate-200 hover:border-blue-400 transition cursor-pointer flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-xs font-mono font-bold text-blue-700">{p.id}</span>
-                  <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                      p.riskCategory === 'CRITICAL'
-                        ? 'bg-red-100 text-red-800'
-                        : p.riskCategory === 'HIGH'
-                        ? 'bg-orange-100 text-orange-800'
-                        : 'bg-amber-100 text-amber-800'
-                    }`}
-                  >
-                    {p.riskCategory}
-                  </span>
-                </div>
-                <h3 className="font-bold text-slate-900 text-sm mb-1 line-clamp-2">{p.name}</h3>
-                <p className="text-xs text-slate-500 mb-3">{p.state} • {p.district}</p>
-
-                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded text-xs font-mono mb-3">
-                  <div>
-                    <span className="text-slate-400 block text-[10px]">Risk Score</span>
-                    <span className="font-extrabold text-slate-900">{p.riskScore}/100</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 block text-[10px]">Est. Delay</span>
-                    <span className="font-extrabold text-red-600">+{p.predictedDelayMonths} Mo</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span>{p.landAreaHa} Ha</span>
-                <span className="text-blue-600 font-bold flex items-center gap-0.5">
-                  Inspect <ChevronRight className="w-3.5 h-3.5" />
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
       )}
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-4 border-t border-slate-200 text-xs">
+        <div className="flex items-center justify-between pt-4 border-t border-slate-200/80 text-xs">
           <span className="text-slate-500">
             Page {currentPage} of {totalPages}
           </span>
@@ -271,14 +272,14 @@ export const ProjectPortfolioPage: React.FC<ProjectPortfolioPageProps> = ({
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-1.5 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-100 cursor-pointer"
+              className="p-2 rounded-xl border border-slate-200 disabled:opacity-40 hover:bg-slate-100 cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-1.5 rounded border border-slate-200 disabled:opacity-40 hover:bg-slate-100 cursor-pointer"
+              className="p-2 rounded-xl border border-slate-200 disabled:opacity-40 hover:bg-slate-100 cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
