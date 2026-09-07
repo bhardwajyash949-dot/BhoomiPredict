@@ -1,3 +1,14 @@
+import os
+import sys
+
+# Ensure root and backend directories are in Python path for Render deployment
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(BASE_DIR)
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 from fastapi import FastAPI, HTTPException, Query, Path
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -9,6 +20,7 @@ app = FastAPI(
     description="AI-Powered Land Acquisition Intelligence & Predictive Decision Support System REST Backend",
     version="4.2.0",
 )
+
 
 # Enable CORS for React frontend
 app.add_middleware(
