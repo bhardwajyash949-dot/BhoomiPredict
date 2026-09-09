@@ -99,6 +99,9 @@ def generate_dataset():
 
     df = pd.DataFrame(data)
     df.to_csv(CSV_PATH, index=False)
+    public_csv = os.path.join(os.path.dirname(BASE_DIR), 'public', 'land_acquisition.csv')
+    if os.path.exists(os.path.dirname(public_csv)):
+        df.to_csv(public_csv, index=False)
     print(f"Generated {CSV_PATH} with {n_samples} records.")
 
 def analyze_project(project_id: str = "LA-2026-1004"):

@@ -5,6 +5,7 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 import shap
 
 CSV_FILE = os.path.join(os.path.dirname(__file__), 'land_acquisition.csv')
+PUBLIC_CSV_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'public', 'land_acquisition.csv')
 
 def create_dataset():
     np.random.seed(42)
@@ -95,7 +96,9 @@ def create_dataset():
 
     df = pd.DataFrame(projects)
     df.to_csv(CSV_FILE, index=False)
-    print(f"Saved dataset to {CSV_FILE}")
+    if os.path.exists(os.path.dirname(PUBLIC_CSV_FILE)):
+        df.to_csv(PUBLIC_CSV_FILE, index=False)
+    print(f"Saved dataset to {CSV_FILE} and {PUBLIC_CSV_FILE}")
     return df
 
 if __name__ == '__main__':
